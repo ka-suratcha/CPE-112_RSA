@@ -1,0 +1,29 @@
+# IDE / Editor settings
+.vscode/
+*.swp
+*.swo
+
+# Build directories
+build/
+out/
+bin/
+obj/
+
+# Executables
+*.exe
+*.out
+*.o
+*.obj
+*.a
+*.so
+*.dll
+
+# Specific file
+main.exe
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
