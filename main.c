@@ -19,9 +19,7 @@ static unsigned long long enterEncrytKey(unsigned long long phi);
 static void enterMsg(char *msg);
 static int enterNumForDecr(unsigned long long dercMsg[], int cap);
 static void printDResult(const unsigned long long dercMsg[], const unsigned long long dercedNum[], int cLen);
-
-
-void printEResult(char msg[], int enc[]);
+static void printEResult(const char msg[], const unsigned long long encryptMsg[], int len);
 
 int main(void) {
     printf("=== Simple Text Encryption Program ===\n\n");
@@ -31,9 +29,6 @@ int main(void) {
     printf("   - Decrypt: enter the same p and q originally used, enter e and the ciphertext.\n\n");
 
     int p, q;
-    int decD;
-    int enc[50];
-
     char msg[50];
 
     // ===== START=====
@@ -45,17 +40,19 @@ int main(void) {
     unsigned long long n   = (unsigned long long)p * (unsigned long long)q;
     unsigned long long phi = (unsigned long long)(p - 1) * (unsigned long long)(q - 1);
 
-    printf("\nn = %llu\n", n);
-    printf("phi(n) = (p-1)(q-1) = %llu\n", phi);
+    printf("==========================================================================\n");
+    printf("n = %llu\n", n);
+    printf("phi(n) = (p-1)(q-1) = %llu\n\n", phi);
         if (n < 128ULL) {
         printf("Warning: n < 128. Some ASCII characters may not round-trip cleanly.\n");
     }
 
     int eKeys[5] = {0};
     listEncryptKeys(phi, p, q, eKeys, 5);
-    printEKey(eKeys, 5);  // your existing printer
+
 
     unsigned long long encryptKey = 0, decrKey = 0;
+    unsigned long long encryptMsg[MAX_LEN] = {0};
     unsigned long long dercMsg[MAX_LEN] = {0};
     unsigned long long dercedNum[MAX_LEN] = {0};
 
@@ -63,28 +60,34 @@ int main(void) {
     int menu;
     while (1) {
         // print menu
-        printf("\nSelect an option:\n");
-        printf("1. Encrypt\n2. Decrypt\n0. Exit\n\nYour choice: ");
+        printEKey(eKeys, 5);  // your existing printer
+        printf("\n\n");
+        printf("Select an option:\n");
+        printf("1. Encrypt\n2. Decrypt\n3. Show all values\n0. Exit\nYour choice: ");
         if (scanf("%d", &menu) != 1) {
             printf("Invalid input (must be an integer).\n");
             return 0;
         }
+        printf("==========================================================================\n");
+
 
         switch (menu) {
         case 1: { // Encrypt
             // enter encryption key and message
             encryptKey = enterEncrytKey(phi);
             enterMsg(msg);
+            int len = (int)strlen(msg);
 
             // encrypt message
-            for (int i = 0; i < (int)strlen(msg); ++i) {
-                enc[i] = (int)msg[i];
-                enc[i] = (int)powMod(enc[i], encryptKey, n);
+            for (int i = 0; i < len; ++i) {
+                encryptMsg[i] = (unsigned char)msg[i];
+                encryptMsg[i] = powMod(encryptMsg[i], encryptKey, n);
             }
 
             // print encryption result
-            printEResult(msg, enc);
-            printf("\n\nTotal characters: %d\n", (int)strlen(msg));
+            printEResult(msg, encryptMsg, len);
+            printf("\nTotal characters: %d\n", len);
+            printf("==========================================================================\n");
             break;
         }
         case 2: { // Decrypt
@@ -92,8 +95,8 @@ int main(void) {
             encryptKey = enterEncrytKey(phi);
 
             // find decryption key
-            decrKey = (int)findDecrKey(encryptKey, phi);
-            printf("\nDecryption key (d) = %d\n", decrKey);
+            decrKey = findDecrKey(encryptKey, phi);
+            printf("\nDecryption key (d) = %llu\n", decrKey);
 
             // enter ciphertext
             int cLen = enterNumForDecr(dercMsg, MAX_LEN);
@@ -101,11 +104,20 @@ int main(void) {
             // decrypt ciphertext
             for (int i = 0; i < cLen; ++i) {
                 dercedNum[i] = dercMsg[i];
-                dercMsg[i] = (int)powMod(dercMsg[i], decrKey, n);
+                dercMsg[i] = powMod(dercMsg[i], decrKey, n);
             }
 
             // print decryption result
+            printf("==========================================================================\n");
             printDResult(dercMsg, dercedNum, cLen);
+            printf("==========================================================================\n");
+            break;
+        }
+        case 3: {
+            // Show all values
+            printf("n = %llu\n", n);
+            printf("phi(n) = (p-1)(q-1) = %llu\n", phi);
+            printf("==========================================================================\n");
             break;
         }
         case 0: exit(0); // Exit the program
@@ -157,11 +169,11 @@ static unsigned long long powMod(unsigned long long base, unsigned long long exp
 }
 
 static unsigned long long findDecrKey(unsigned long long encryptKey, unsigned long long phi) {
-    int k = 1;
+    unsigned long long k = 1;
     while (1) {
-        int r = (1 + k * phi) % encryptKey;
+        unsigned long long r = (1 + k * phi) % encryptKey;
         if (r == 0)
-            return (unsigned int)(1 + k * phi) / encryptKey;
+            return (unsigned long long)(1 + k * phi) / encryptKey;
         k++;
     }
 }
@@ -198,14 +210,13 @@ static void listEncryptKeys(unsigned long long phi, int p, int q, int out[], int
     }
 }
 static void printEKey(int eKeys[], int cap) {
-    printf("\nPossible encryption keys:\n");
+    printf("Possible encryption keys:\n");
     int shown = 0;
     for (int i = 0; i < cap && eKeys[i] != 0; i++){
         printf("%d\t", eKeys[i]);
         ++shown;
     }
     if(!shown) printf("None\n");
-
 }
 static unsigned long long enterEncrytKey(unsigned long long phi) {
     unsigned long long encryptKey;
@@ -219,15 +230,14 @@ static unsigned long long enterEncrytKey(unsigned long long phi) {
 
         if (encryptKey >= 2ULL && encryptKey < phi && gcd(encryptKey, phi) == 1ULL) return encryptKey;
         printf("Invalid encryption key. Try again.\n");
-        while ((encryptKey = getchar()) != '\n' && encryptKey != EOF);
+        int ch; while ((ch = getchar()) != '\n' && ch != EOF) {}
     }
 }
 static void enterMsg(char *msg) {
-
-    printf("Enter your message (max 50 chars, no spaces — use '-' instead): ");
+    printf("Enter your message (max 50 chars, no spaces: use '-' instead): ");
     scanf("%49s", msg);
+    printf("==========================================================================\n");
 }
-
 static int enterNumForDecr(unsigned long long dercMsg[], int cap) {
     int t;
     while(1) {
@@ -246,55 +256,53 @@ static int enterNumForDecr(unsigned long long dercMsg[], int cap) {
     }
     return t;
 }
-
-void printEResult(char msg[], int enc[]) {
-    printf("\nBefore encryption (characters):\n");
-    for (int i = 0; i < (int)strlen(msg); ++i)
-        printf("%c\t", msg[i]);
+static void printEResult(const char msg[], const unsigned long long encryptMsg[], int len) {
+    printf("= Before encryption (characters):\n");
+    for (int i = 0; i < len; ++i) printf("%c\t", msg[i]); 
     printf("\n");
 
-    printf("Before encryption (ASCII codes):\n");
-    for (int i = 0; i < (int)strlen(msg); ++i)
-        printf("%d\t", msg[i]);
+    printf("= Before encryption (ASCII codes):\n");
+    for (int i = 0; i < len; ++i) printf("%d\t", (unsigned char)msg[i]); 
+    printf("\n");
 
-    printf("\n\nAfter encryption (numbers):\n");
-    for (int i = 0; i < (int)strlen(msg); ++i)
-        printf("%d\t", enc[i]);
+    printf("= After encryption (numbers):\n");
+    for (int i = 0; i < len; ++i) printf("%llu\t", encryptMsg[i]); 
+    printf("\n");
 }
-
 static void printDResult(const unsigned long long dercMsg[], const unsigned long long dercedNum[], int cLen) {
-    printf("\n\nCiphertext (numbers before decryption):\n");
+    printf("= Ciphertext (numbers before decryption):\n");
     for (int i = 0; i < cLen; ++i)
         printf("%llu\t", dercedNum[i]);
-
-    printf("\nPlaintext (numbers after decryption):\n");
+    printf("\n");
+    
+    printf("= Plaintext (numbers after decryption):\n");
     for (int i = 0; i < cLen; ++i)
         printf("%llu\t", dercMsg[i]);
-    printf("\n");
+    printf("\n\n");
 
-    printf("Plaintext (as text):\n");
+    printf("Message (as text):\n");
     for (int i = 0; i < cLen; ++i)
         printf("%c", (char)dercMsg[i]);
     printf("\n");
 }
 
-// use 128bits to avoid overflow
-// static unsigned long long powMod(unsigned long long base,
-//                                  unsigned long long exp,
-//                                  unsigned long long mod) {
-//     if (mod == 1) return 0ULL;      // x mod 1 == 0
-//     unsigned long long res = 1ULL; // exp == 0 -> 1 % mod
+/*use 128bits to avoid overflow
+static unsigned long long powMod(unsigned long long base,
+                                 unsigned long long exp,
+                                 unsigned long long mod) {
+    if (mod == 1) return 0ULL;      // x mod 1 == 0
+    unsigned long long res = 1ULL; // exp == 0 -> 1 % mod
 
-//     base %= mod; // shrink base into 0, mod-1
+    base %= mod; // shrink base into 0, mod-1
 
-//     while (exp) {
-//         if (exp & 1ULL) {
-//             __uint128_t x = ( (__uint128_t)res * base );
-//             res = (unsigned long long)(x % mod);
-//         }
-//         __uint128_t y = ( (__uint128_t)base * base );
-//         base = (unsigned long long)(y % mod);
-//         exp >>= 1ULL;
-//     }
-//     return res; // (base^original_exp) % mod
-// }
+    while (exp) {
+        if (exp & 1ULL) {
+            __uint128_t x = ( (__uint128_t)res * base );
+            res = (unsigned long long)(x % mod);
+        }
+        __uint128_t y = ( (__uint128_t)base * base );
+        base = (unsigned long long)(y % mod);
+        exp >>= 1ULL;
+    }
+    return res; // (base^original_exp) % mod
+}*/
