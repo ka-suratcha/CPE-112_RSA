@@ -14,9 +14,9 @@ static unsigned long long findDecrKey(unsigned long long encE, unsigned long lon
 static void enterPQ(int *p_ptr, int *q_ptr);
 static void listEncryptKeys(unsigned long long phi, int p, int q, int eKey[], int cap);
 static void printEKey(int eKeys[], int cap);
-
 static unsigned long long enterEncrytKey(unsigned long long phi);
-void enterMsg(char *msg);
+
+static void enterMsg(char *msg);
 void enterNumForDecr(int *dec, int *cLen);
 void printEResult(char msg[], int enc[]);
 void printDResult(int dec[], int cLen, int decPrev[]);
@@ -219,7 +219,7 @@ static unsigned long long enterEncrytKey(unsigned long long phi) {
     }
 }
 
-void enterMsg(char *msg) {
+static void enterMsg(char *msg) {
     printf("Enter your message (max 50 chars, no spaces — use '-' instead): ");
     scanf("%49s", msg);
 }
