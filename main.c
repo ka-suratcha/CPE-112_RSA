@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-int gcd(int a, int b);
+static unsigned long long gcd(unsigned long long a, unsigned long long b);
 int isPrime(int pr);
 void listEncrytKey(int phi, int p, int q, int eKeys[]);
 int enterEncrytKey(int encE, int phi);
@@ -104,12 +104,13 @@ int main(void) {
 
 /* === Core functions === */
 /* ---------- Math helpers ---------- */
-int gcd(int a, int b) {
-    int g = 1;
-    for (int i = 1; i <= a && i <= b; i++)
-        if (a % i == 0 && b % i == 0)
-            g = i;
-    return g;
+static unsigned long long gcd(unsigned long long a, unsigned long long b) {
+    while (b) {
+        unsigned long long t = b;
+        b = a % b;
+        a = t;
+    }
+    return a;
 }
 
 int isPrime(int pr) {
