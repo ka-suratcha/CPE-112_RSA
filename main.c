@@ -6,9 +6,9 @@
 
 static unsigned long long gcd(unsigned long long a, unsigned long long b);
 static int isPrime(int pr);
+static unsigned long long powMod(unsigned long long base, unsigned long long exp, unsigned long long mod);
 void listEncrytKey(int phi, int p, int q, int eKeys[]);
 int enterEncrytKey(int encE, int phi);
-unsigned long powMod(int base, int exp, int modN);
 unsigned int findDecrKey(int encE, int phi);
 void enterMsg(char *msg);
 void enterPQ(int primeOK, int *p_ptr, int *q_ptr);
@@ -125,22 +125,23 @@ static int isPrime(int pr) {
 }
 
 /* (base^exp) % mod via iterative binary exponentiation */
-unsigned long powMod(int base, int exp, int modN) {
-    unsigned long res;
-    if (base == 0)
-        return 0;
-    if (exp == 0)
-        return 1;
+static unsigned long long powMod(unsigned long long base, unsigned long long exp, unsigned long long mod) {
+    if(mod == 1) return 0; // everything mod 1 = 0
+    if (base == 0) return 0;
+    if (exp == 0) return 1;
+
+    unsigned long long res = 1ULL; 
+
 
     if (exp % 2 == 0) {
-        res = powMod(base, exp / 2, modN);
-        res = (res * res) % modN;
+        res = powMod(base, exp / 2, mod);
+        res = (res * res) % mod;
     }
     else {
-        res = base % modN;
-        res = (res * powMod(base, exp - 1, modN) % modN) % modN;
+        res = base % mod;
+        res = (res * powMod(base, exp - 1, mod) % mod) % mod;
     }
-    return (unsigned long)((res + modN) % modN);
+    return (unsigned long)((res + mod) % mod);
 }
 
 /* ---------- UI helpers ---------- */
@@ -270,3 +271,24 @@ unsigned int findDecrKey(int encE, int phi) {
         k++;
     }
 }
+
+// use 128bits to avoid overflow
+// static unsigned long long powMod(unsigned long long base,
+//                                  unsigned long long exp,
+//                                  unsigned long long mod) {
+//     if (mod == 1) return 0ULL;      // x mod 1 == 0
+//     unsigned long long res = 1ULL; // exp == 0 -> 1 % mod
+
+//     base %= mod; // shrink base into 0, mod-1
+
+//     while (exp) {
+//         if (exp & 1ULL) {
+//             __uint128_t x = ( (__uint128_t)res * base );
+//             res = (unsigned long long)(x % mod);
+//         }
+//         __uint128_t y = ( (__uint128_t)base * base );
+//         base = (unsigned long long)(y % mod);
+//         exp >>= 1ULL;
+//     }
+//     return res; // (base^original_exp) % mod
+// }
