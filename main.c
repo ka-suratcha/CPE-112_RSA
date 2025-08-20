@@ -19,19 +19,10 @@ void printDResult(int dec[], int cLen, int decPrev[]);
 
 int main(void) {
     printf("=== Simple Text Encryption Program ===\n\n");
-    printf("How to use this program:\n\n");
-    printf("1) Enter two prime numbers to generate the public key.\n");
-    printf("   If you only want to encrypt (not decrypt), you may choose any primes.\n");
-    printf("   However, remember them because they are required for decryption.\n\n");
-    printf("2) Choose an option by entering 1, 2, or 0:\n");
-    printf("   2.1) If you select Encryption:\n");
-    printf("        - Enter an encryption key (e) from the 'Possible encryption keys' list.\n");
-    printf("        - Enter your text (spaces are not allowed, use '-' instead).\n\n");
-    printf("   2.2) If you select Decryption:\n");
-    printf("        - Enter the encryption key (e).\n");
-    printf("        - Enter how many numbers are in the ciphertext.\n");
-    printf("        - Enter each encrypted number when prompted.\n");
-    printf("        - The decrypted text will be displayed afterwards.\n\n");
+    printf("1) Enter two prime numbers p and q to generate keys.\n");
+    printf("2) Choose Encrypt or Decrypt.\n");
+    printf("   - Encrypt: choose e from the list (or any valid e), then enter text.\n");
+    printf("   - Decrypt: enter the same p and q originally used, enter e and the ciphertext.\n\n");
 
     int p, q, modN, phi, encE, decD;
     int enc[50], cLen, dec[50], decPrev[50];
@@ -112,6 +103,7 @@ int main(void) {
 }
 
 /* === Core functions === */
+/* ---------- Math helpers ---------- */
 int gcd(int a, int b) {
     int g = 1;
     for (int i = 1; i <= a && i <= b; i++)
@@ -130,16 +122,26 @@ int isPrime(int pr) {
     return 1;
 }
 
-void listEncrytKey(int phi, int p, int q, int eKeys[]) {
-    int k = 0;
-    for (int e = 2; e < phi; e++) {
-        if (gcd(e, phi) == 1 && e != p && e != q)
-            eKeys[k++] = e;
-        if (k == 5)
-            break;
+/* (base^exp) % mod via iterative binary exponentiation */
+unsigned long powMod(int base, int exp, int modN) {
+    unsigned long res;
+    if (base == 0)
+        return 0;
+    if (exp == 0)
+        return 1;
+
+    if (exp % 2 == 0) {
+        res = powMod(base, exp / 2, modN);
+        res = (res * res) % modN;
     }
+    else {
+        res = base % modN;
+        res = (res * powMod(base, exp - 1, modN) % modN) % modN;
+    }
+    return (unsigned long)((res + modN) % modN);
 }
 
+/* ---------- UI helpers ---------- */
 void enterPQ(int ok, int *p_ptr, int *q_ptr) {
     int pTmp, qTmp;
 
@@ -176,6 +178,16 @@ void enterPQ(int ok, int *p_ptr, int *q_ptr) {
     *q_ptr = qTmp;
 }
 
+void listEncrytKey(int phi, int p, int q, int eKeys[]) {
+    int k = 0;
+    for (int e = 2; e < phi; e++) {
+        if (gcd(e, phi) == 1 && e != p && e != q)
+            eKeys[k++] = e;
+        if (k == 5)
+            break;
+    }
+}
+
 int enterEncrytKey(int encE, int phi) {
     while (1) {
         printf("Enter the encryption key (e): ");
@@ -192,34 +204,9 @@ int enterEncrytKey(int encE, int phi) {
     }
 }
 
-void printEKey(int eKeys[]) {
-    printf("\nPossible encryption keys:\n");
-    for (int i = 0; i < 5; i++)
-        printf("%d\t", eKeys[i]);
-    printf("\n");
-}
-
 void enterMsg(char *msg) {
     printf("Enter your message (max 50 chars, no spaces — use '-' instead): ");
     scanf("%49s", msg);
-}
-
-unsigned long powMod(int base, int exp, int modN) {
-    unsigned long res;
-    if (base == 0)
-        return 0;
-    if (exp == 0)
-        return 1;
-
-    if (exp % 2 == 0) {
-        res = powMod(base, exp / 2, modN);
-        res = (res * res) % modN;
-    }
-    else {
-        res = base % modN;
-        res = (res * powMod(base, exp - 1, modN) % modN) % modN;
-    }
-    return (unsigned long)((res + modN) % modN);
 }
 
 void enterNumForDecr(int *dec, int *cLen) {
@@ -232,6 +219,13 @@ void enterNumForDecr(int *dec, int *cLen) {
         scanf("%d", &dec[i - 1]);
     }
     *cLen = t;
+}
+
+void printEKey(int eKeys[]) {
+    printf("\nPossible encryption keys:\n");
+    for (int i = 0; i < 5; i++)
+        printf("%d\t", eKeys[i]);
+    printf("\n");
 }
 
 void printEResult(char msg[], int enc[]) {
