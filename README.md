@@ -10,7 +10,7 @@ I decided to make a **simple RSA encryption/decryption program**, because:
 - It is a good way to learn and practice the **C programming language**.
 - It also helps you remember things you learned about cryptography and number theory.
 
-### RSA briefly explain:
+### 🔐 About RSA:
 RSA is an asymmetric cryptographic algorithm that uses two keys: a private key to decrypt data and a public key to encrypt it. Its security comes from how hard it is to factor big prime numbers.
 
 ---
