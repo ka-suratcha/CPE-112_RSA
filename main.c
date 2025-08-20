@@ -11,7 +11,7 @@ static unsigned long long powMod(unsigned long long base, unsigned long long exp
 static unsigned long long findDecrKey(unsigned long long encE, unsigned long long phi);
 
 /* ---------- UI helpers ---------- */
-void enterPQ(int primeOK, int *p_ptr, int *q_ptr);
+static void enterPQ(int *p_ptr, int *q_ptr);
 void listEncrytKey(int phi, int p, int q, int eKeys[]);
 int enterEncrytKey(int encE, int phi);
 void enterMsg(char *msg);
@@ -27,22 +27,26 @@ int main(void) {
     printf("   - Encrypt: choose e from the list (or any valid e), then enter text.\n");
     printf("   - Decrypt: enter the same p and q originally used, enter e and the ciphertext.\n\n");
 
-    int p, q, modN, phi, encE, decD;
+    int p, q;
+    int phi, encE, decD;
     int enc[50], cLen, dec[50], decPrev[50];
     int eKeys[5];
     char msg[50];
-    int primeOK = 0;
 
     // ===== START=====
 
     // Enter p and q
-    enterPQ(primeOK, &p, &q);
+    enterPQ(&p, &q);
 
-    // caculate phi and modN
-    phi = (p - 1) * (q - 1);
-    modN = p * q;
-    printf("n = %d\n", modN);
-    printf("phi(n) = (p-1)(q-1) = %d\n", phi);
+    // caculate phi and n
+    unsigned long long n   = (unsigned long long)p * (unsigned long long)q;
+    unsigned long long phi = (unsigned long long)(p - 1) * (unsigned long long)(q - 1);
+
+    printf("n = %llu\n", n);
+    printf("phi(n) = (p-1)(q-1) = %llu\n", phi);
+        if (n < 128ULL) {
+        printf("Warning: n < 128. Some ASCII characters may not round-trip cleanly.\n");
+    }
 
     // Find possible encryption keys and print it
     // caculate possible encryption keys
@@ -70,7 +74,7 @@ int main(void) {
             // encrypt message
             for (int i = 0; i < (int)strlen(msg); ++i) {
                 enc[i] = (int)msg[i];
-                enc[i] = (int)powMod(enc[i], encE, modN);
+                enc[i] = (int)powMod(enc[i], encE, n);
             }
 
             // print encryption result
@@ -92,7 +96,7 @@ int main(void) {
             // decrypt ciphertext
             for (int i = 0; i < cLen; ++i) {
                 decPrev[i] = dec[i];
-                dec[i] = (int)powMod(dec[i], decD, modN);
+                dec[i] = (int)powMod(dec[i], decD, n);
             }
 
             // print decryption result
@@ -158,36 +162,23 @@ static unsigned long long findDecrKey(unsigned long long encE, unsigned long lon
 }
 
 /* ---------- UI helpers ---------- */
-void enterPQ(int ok, int *p_ptr, int *q_ptr) {
+static void enterPQ(int *p_ptr, int *q_ptr) {
     int pTmp, qTmp;
 
-    while (true) {
-        printf("Enter the first prime number (p): ");
-        if (scanf("%d", &pTmp) != 1) {
-            printf("Invalid input (must be an integer).\n");
-            while (getchar() != '\n');
-            continue;
-        }
-        ok = isPrime(pTmp);
-        if (ok == 0 || pTmp < 2) {
-            printf("Invalid input (must be a prime number >= 2).\n");
-        }
-        else break;
+    while(true){
+        printf("Enter the first prime number (p >= 2): ");
+        if (scanf("%d", &pTmp) == 1 && isPrime(pTmp)) break;
+        printf("Invalid input (must be a prime number >= 2).\n");
+        while (getchar() != '\n');
+        continue;
     }
 
-    while (true) {
-        printf("Enter the second prime number (q): ");
-        if (scanf("%d", &qTmp) != 1) {
-            printf("Invalid input (must be an integer).\n");
-            while (getchar() != '\n');
-            continue;
-        }
-
-        ok = isPrime(qTmp);
-        if (ok == 0 || qTmp == pTmp || qTmp < 2) {
-            printf("Invalid input (must be a different prime >= 2).\n");
-        }
-        else break;
+    while(true){
+        printf("Enter the second prime number (q, different from p): ");
+        if (scanf("%d", &qTmp) == 1 && isPrime(qTmp) && qTmp != pTmp) break;
+        printf("Invalid input (must be a different prime >= 2).\n");
+        while (getchar() != '\n');
+        continue;
     }
 
     *p_ptr = pTmp;
