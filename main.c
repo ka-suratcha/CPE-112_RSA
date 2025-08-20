@@ -12,11 +12,12 @@ static unsigned long long findDecrKey(unsigned long long encE, unsigned long lon
 
 /* ---------- UI helpers ---------- */
 static void enterPQ(int *p_ptr, int *q_ptr);
-void listEncrytKey(int phi, int p, int q, int eKeys[]);
+static void listEncryptKeys(unsigned long long phi, int p, int q, int eKey[], int cap);
+static void printEKey(int eKeys[], int cap);
+
 int enterEncrytKey(int encE, int phi);
 void enterMsg(char *msg);
 void enterNumForDecr(int *dec, int *cLen);
-void printEKey(int eKeys[]);
 void printEResult(char msg[], int enc[]);
 void printDResult(int dec[], int cLen, int decPrev[]);
 
@@ -28,9 +29,9 @@ int main(void) {
     printf("   - Decrypt: enter the same p and q originally used, enter e and the ciphertext.\n\n");
 
     int p, q;
-    int phi, encE, decD;
+    int encE, decD;
     int enc[50], cLen, dec[50], decPrev[50];
-    int eKeys[5];
+
     char msg[50];
 
     // ===== START=====
@@ -48,11 +49,10 @@ int main(void) {
         printf("Warning: n < 128. Some ASCII characters may not round-trip cleanly.\n");
     }
 
-    // Find possible encryption keys and print it
-    // caculate possible encryption keys
-    listEncrytKey(phi, p, q, eKeys);
-    // Print possible encryption keys
-    printEKey(eKeys);
+    int eKeys[5] = {0};
+    listEncryptKeys(phi, p, q, eKeys, 5);
+    printEKey(eKeys, 5);  // your existing printer
+
 
     // Choose operation
     int menu;
@@ -184,15 +184,22 @@ static void enterPQ(int *p_ptr, int *q_ptr) {
     *p_ptr = pTmp;
     *q_ptr = qTmp;
 }
-
-void listEncrytKey(int phi, int p, int q, int eKeys[]) {
+static void listEncryptKeys(unsigned long long phi, int p, int q, int out[], int cap) {
+    for (int i = 0; i < cap; ++i) out[i] = 0;         // sentinel init
     int k = 0;
-    for (int e = 2; e < phi; e++) {
-        if (gcd(e, phi) == 1 && e != p && e != q)
-            eKeys[k++] = e;
-        if (k == 5)
-            break;
+    for (unsigned long long e = 2; e < phi && k < cap; ++e) {
+        if (e == (unsigned long long)p || e == (unsigned long long)q) continue;
+        if (gcd(e, phi) == 1ULL) out[k++] = (int)e;
     }
+}
+static void printEKey(int eKeys[], int cap) {
+    printf("\nPossible encryption keys:\n");
+    int shown = 0;
+    for (int i = 0; i < cap && eKeys[i] != 0; i++){
+        printf("%d\t", eKeys[i]);
+        ++shown;
+    }
+    if(!shown) printf("None\n");
 }
 
 int enterEncrytKey(int encE, int phi) {
@@ -226,13 +233,6 @@ void enterNumForDecr(int *dec, int *cLen) {
         scanf("%d", &dec[i - 1]);
     }
     *cLen = t;
-}
-
-void printEKey(int eKeys[]) {
-    printf("\nPossible encryption keys:\n");
-    for (int i = 0; i < 5; i++)
-        printf("%d\t", eKeys[i]);
-    printf("\n");
 }
 
 void printEResult(char msg[], int enc[]) {
