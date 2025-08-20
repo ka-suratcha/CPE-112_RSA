@@ -4,16 +4,19 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+/* ---------- Math helpers ---------- */
 static unsigned long long gcd(unsigned long long a, unsigned long long b);
 static int isPrime(int pr);
 static unsigned long long powMod(unsigned long long base, unsigned long long exp, unsigned long long mod);
+static unsigned long long findDecrKey(unsigned long long encE, unsigned long long phi);
+
+/* ---------- UI helpers ---------- */
+void enterPQ(int primeOK, int *p_ptr, int *q_ptr);
 void listEncrytKey(int phi, int p, int q, int eKeys[]);
 int enterEncrytKey(int encE, int phi);
-unsigned int findDecrKey(int encE, int phi);
 void enterMsg(char *msg);
-void enterPQ(int primeOK, int *p_ptr, int *q_ptr);
-void printEKey(int eKeys[]);
 void enterNumForDecr(int *dec, int *cLen);
+void printEKey(int eKeys[]);
 void printEResult(char msg[], int enc[]);
 void printDResult(int dec[], int cLen, int decPrev[]);
 
@@ -144,6 +147,16 @@ static unsigned long long powMod(unsigned long long base, unsigned long long exp
     return (unsigned long)((res + mod) % mod);
 }
 
+static unsigned long long findDecrKey(unsigned long long encE, unsigned long long phi) {
+    int k = 1;
+    while (1) {
+        int r = (1 + k * phi) % encE;
+        if (r == 0)
+            return (unsigned int)(1 + k * phi) / encE;
+        k++;
+    }
+}
+
 /* ---------- UI helpers ---------- */
 void enterPQ(int ok, int *p_ptr, int *q_ptr) {
     int pTmp, qTmp;
@@ -260,16 +273,6 @@ void printDResult(int dec[], int cLen, int decPrev[]) {
     for (int i = 0; i < cLen; ++i)
         printf("%c", dec[i]);
     printf("\n");
-}
-
-unsigned int findDecrKey(int encE, int phi) {
-    int k = 1;
-    while (1) {
-        int r = (1 + k * phi) % encE;
-        if (r == 0)
-            return (unsigned int)(1 + k * phi) / encE;
-        k++;
-    }
 }
 
 // use 128bits to avoid overflow
