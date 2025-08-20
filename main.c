@@ -5,7 +5,7 @@
 #include <stdbool.h>
 
 static unsigned long long gcd(unsigned long long a, unsigned long long b);
-int isPrime(int pr);
+static int isPrime(int pr);
 void listEncrytKey(int phi, int p, int q, int eKeys[]);
 int enterEncrytKey(int encE, int phi);
 unsigned long powMod(int base, int exp, int modN);
@@ -113,12 +113,13 @@ static unsigned long long gcd(unsigned long long a, unsigned long long b) {
     return a;
 }
 
-int isPrime(int pr) {
+static int isPrime(int pr) {
     if (pr < 2) return 0; // 0 and 1 are not prime numbers
     if (pr == 2 || pr == 3) return 1; // 2 is the only even
     if (pr % 2 == 0) return 0; // even numbers greater than 2 are not prime
-    int r = (int)sqrt((double)pr);
-    for (int i = 3; i <= r; i += 2)
+
+    int r = (int)sqrt((double)pr); // calculate the square root of pr
+    for (int i = 3; i <= r; i += 2) // check for factors from 3 to sqrt(pr)
         if (pr % i == 0) return 0;
     return 1;
 }
