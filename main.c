@@ -15,7 +15,7 @@ static void enterPQ(int *p_ptr, int *q_ptr);
 static void listEncryptKeys(unsigned long long phi, int p, int q, int eKey[], int cap);
 static void printEKey(int eKeys[], int cap);
 
-int enterEncrytKey(int encE, int phi);
+static unsigned long long enterEncrytKey(unsigned long long phi);
 void enterMsg(char *msg);
 void enterNumForDecr(int *dec, int *cLen);
 void printEResult(char msg[], int enc[]);
@@ -29,7 +29,7 @@ int main(void) {
     printf("   - Decrypt: enter the same p and q originally used, enter e and the ciphertext.\n\n");
 
     int p, q;
-    int encE, decD;
+    int decD;
     int enc[50], cLen, dec[50], decPrev[50];
 
     char msg[50];
@@ -43,7 +43,7 @@ int main(void) {
     unsigned long long n   = (unsigned long long)p * (unsigned long long)q;
     unsigned long long phi = (unsigned long long)(p - 1) * (unsigned long long)(q - 1);
 
-    printf("n = %llu\n", n);
+    printf("\nn = %llu\n", n);
     printf("phi(n) = (p-1)(q-1) = %llu\n", phi);
         if (n < 128ULL) {
         printf("Warning: n < 128. Some ASCII characters may not round-trip cleanly.\n");
@@ -53,6 +53,7 @@ int main(void) {
     listEncryptKeys(phi, p, q, eKeys, 5);
     printEKey(eKeys, 5);  // your existing printer
 
+    unsigned long long encE;
 
     // Choose operation
     int menu;
@@ -68,7 +69,7 @@ int main(void) {
         switch (menu) {
         case 1: { // Encrypt
             // enter encryption key and message
-            encE = enterEncrytKey(encE, phi);
+            encE = enterEncrytKey(phi);
             enterMsg(msg);
 
             // encrypt message
@@ -84,7 +85,7 @@ int main(void) {
         }
         case 2: { // Decrypt
             // enter encryption key
-            encE = enterEncrytKey(encE, phi);
+            encE = enterEncrytKey(phi);
 
             // find decryption key
             decD = (int)findDecrKey(encE, phi);
@@ -202,18 +203,18 @@ static void printEKey(int eKeys[], int cap) {
     if(!shown) printf("None\n");
 }
 
-int enterEncrytKey(int encE, int phi) {
+static unsigned long long enterEncrytKey(unsigned long long phi) {
+    unsigned long long encE;
     while (1) {
-        printf("Enter the encryption key (e): ");
-        if (scanf("%d", &encE) != 1) {
+        printf("Enter the encryption key (e) where 2 <= e < phi and gcd(e, phi) = 1: ");
+        if (scanf("%llu", &encE) != 1) {
             printf("Invalid input (must be an integer).\n");
             while (getchar() != '\n');
             continue;
         }
 
-        if (gcd(encE, phi) == 1)
-            return encE; // e must be coprime with φ(n)
-        printf("Invalid encryption key. Please try again.\n");
+        if (encE >= 2ULL && encE < phi && gcd(encE, phi) == 1ULL) return encE;
+        printf("Invalid encryption key. Try again.\n");
         while ((encE = getchar()) != '\n' && encE != EOF);
     }
 }
